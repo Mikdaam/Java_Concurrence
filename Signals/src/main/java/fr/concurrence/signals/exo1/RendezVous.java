@@ -1,4 +1,4 @@
-package fr.concurrence.signals;
+package fr.concurrence.signals.exo1;
 
 import java.util.Objects;
 
