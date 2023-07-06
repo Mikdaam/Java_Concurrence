@@ -4,20 +4,21 @@ public class Exchanger<T> {
 	private final Object lock = new Object();
 	private T firstCallValue;
 	private T secondCallValue;
-	private boolean firstCall = true;
-	private boolean secondCall;
+	private enum STATE {FIRST_CALL, SECOND_CALL, NO_CALL}
+	private STATE state = STATE.NO_CALL;
+
 	public T exchange(T value) throws InterruptedException {
 		synchronized (lock) {
-			if (firstCall) {
-				firstCall = false;
+			if (state == STATE.NO_CALL) {
 				firstCallValue = value;
-				while (!secondCall) {
+				state = STATE.FIRST_CALL;
+				while (state != STATE.SECOND_CALL) {
 					lock.wait();
 				}
 				return secondCallValue;
-			} else  {
-				secondCall = true;
+			} else {
 				secondCallValue = value;
+				state = STATE.SECOND_CALL;
 				lock.notify();
 				return firstCallValue;
 			}
