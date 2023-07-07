@@ -42,13 +42,17 @@ public class Bid {
 	}
 
 	private Thread getMin() {
-		return propositions.entrySet().stream()
-				.min(Comparator.comparingInt(Map.Entry::getValue))
-				.map(Map.Entry::getKey)
-				.orElse(null);
+		synchronized (lock) {
+			return propositions.entrySet().stream()
+					.min(Comparator.comparingInt(Map.Entry::getValue))
+					.map(Map.Entry::getKey)
+					.orElse(null);
+		}
 	}
 
 	private int average() {
-		return (int) propositions.values().stream().mapToInt(Integer::intValue).average().getAsDouble();
+		synchronized (lock) {
+			return (int) propositions.values().stream().mapToInt(Integer::intValue).average().getAsDouble();
+		}
 	}
 }
