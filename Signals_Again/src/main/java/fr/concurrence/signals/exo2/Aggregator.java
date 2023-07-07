@@ -1,29 +1,37 @@
 package fr.concurrence.signals.exo2;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Aggregator {
 	private final Object lock = new Object();
-	private final ArrayList<Integer> temperatures = new ArrayList<>();
-	private final int count;
+	private final HashMap<Thread, Integer> temperatures = new HashMap<>();
+	private final int aggregators;
 
 	public Aggregator(int count) {
-		this.count = count;
+		this.aggregators = count;
 	}
 
-	public void add(int value) {
+	public void add(int value) throws InterruptedException {
 		synchronized (lock) {
-			temperatures.add(value);
+			while (temperatures.containsKey(Thread.currentThread())) {
+				lock.wait();
+			}
+
+			temperatures.put(Thread.currentThread(), value);
 			lock.notifyAll();
 		}
 	}
 
 	public double average () throws InterruptedException {
 		synchronized (lock) {
-			while (temperatures.size() < count) {
+			while (temperatures.size() < aggregators) {
 				lock.wait();
 			}
-			return temperatures.stream().mapToInt(Integer::intValue).average().getAsDouble();
+			var average = temperatures.values().stream().mapToInt(Integer::intValue).average().getAsDouble();
+			temperatures.clear();
+			lock.notifyAll();
+			return average;
 		}
 	}
 }
